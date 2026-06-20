@@ -1,7 +1,6 @@
 package security
 
 import (
-	"github.com/zclconf/go-cty/cty"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
 	
 	"github.com/terraform-lint/terraform-lint/internal/types"
