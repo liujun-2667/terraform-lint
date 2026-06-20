@@ -2,7 +2,8 @@ package security
 
 import (
 	"fmt"
-	
+	"strings"
+
 	"github.com/terraform-lint/terraform-lint/internal/types"
 	"github.com/terraform-lint/terraform-lint/internal/utils"
 )
@@ -47,4 +48,46 @@ func (r *SensitiveDataRule) Check(ctx *types.RuleContext) []types.Finding {
 	}
 
 	return findings
+}
+
+func (r *SensitiveDataRule) CanFix() bool {
+	return true
+}
+
+func (r *SensitiveDataRule) GenerateFix(ctx *types.RuleContext, finding *types.Finding) ([]types.FixInstruction, error) {
+	targetVar, ok := ctx.Variables[finding.ResourceName]
+	if !ok {
+		return nil, fmt.Errorf("variable not found: %s", finding.ResourceName)
+	}
+
+	if targetVar.Default == nil {
+		return nil, nil
+	}
+
+	lines := strings.Split(string(ctx.File.Content), "\n")
+	startLine := targetVar.Range.Start.Line
+	endLine := targetVar.Range.End.Line
+
+	defaultLine := -1
+	for i := startLine - 1; i < endLine && i < len(lines); i++ {
+		trimmed := strings.TrimSpace(lines[i])
+		if strings.HasPrefix(trimmed, "default") {
+			defaultLine = i + 1
+			break
+		}
+	}
+
+	if defaultLine == -1 {
+		return nil, fmt.Errorf("default attribute not found for variable: %s", finding.ResourceName)
+	}
+
+	return []types.FixInstruction{
+		{
+			Action:       types.FixActionDeleteAttribute,
+			ResourceType: "variable",
+			ResourceName: finding.ResourceName,
+			Attribute:    "default",
+			Line:         defaultLine,
+		},
+	}, nil
 }

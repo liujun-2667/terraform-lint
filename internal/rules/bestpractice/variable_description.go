@@ -43,3 +43,21 @@ func (r *VariableDescriptionRule) Check(ctx *types.RuleContext) []types.Finding 
 
 	return findings
 }
+
+func (r *VariableDescriptionRule) CanFix() bool {
+	return true
+}
+
+func (r *VariableDescriptionRule) GenerateFix(ctx *types.RuleContext, finding *types.Finding) ([]types.FixInstruction, error) {
+	return []types.FixInstruction{
+		{
+			Action:       types.FixActionAppendAttribute,
+			ResourceType: finding.ResourceType,
+			ResourceName: finding.ResourceName,
+			Attribute:    "description",
+			Content:      `description = "Variable description"`,
+			Line:         finding.Line,
+			Column:       finding.Column,
+		},
+	}, nil
+}

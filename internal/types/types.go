@@ -35,6 +35,56 @@ type Finding struct {
 	Range       hcl.Range   `json:"-"`
 }
 
+type FixActionType string
+
+const (
+	FixActionAppendAttribute  FixActionType = "append_attribute"
+	FixActionReplaceValue     FixActionType = "replace_value"
+	FixActionAppendBlock      FixActionType = "append_block"
+	FixActionDeleteAttribute  FixActionType = "delete_attribute"
+)
+
+type FixInstruction struct {
+	Action       FixActionType
+	ResourceType string
+	ResourceName string
+	Attribute    string
+	BlockType    string
+	BlockLabels  []string
+	OldValue     string
+	NewValue     string
+	Content      string
+	Line         int
+	Column       int
+}
+
+type FixResult struct {
+	File         string
+	RuleID       string
+	Action       FixActionType
+	Applied      bool
+	Error        string
+	OriginalLine string
+	FixedLine    string
+}
+
+type FileFixSummary struct {
+	File          string
+	BackupPath    string
+	FindingsFixed int
+	Results       []FixResult
+	RolledBack    bool
+	RollbackReason string
+	NewFindings    []Finding
+}
+
+type FixSummary struct {
+	FilesFixed     int
+	TotalFixed     int
+	FilesRolledBack int
+	FileSummaries  []FileFixSummary
+}
+
 type Rule interface {
 	ID() string
 	Name() string
@@ -46,7 +96,7 @@ type Rule interface {
 	SetSeverity(Severity)
 	Check(ctx *RuleContext) []Finding
 	CanFix() bool
-	Fix(ctx *RuleContext, finding *Finding) error
+	GenerateFix(ctx *RuleContext, finding *Finding) ([]FixInstruction, error)
 	IsPlugin() bool
 }
 
@@ -235,7 +285,9 @@ func (r *BaseRule) GetParam(key string, defaultValue interface{}) interface{} {
 
 func (r *BaseRule) CanFix() bool { return false }
 
-func (r *BaseRule) Fix(ctx *RuleContext, finding *Finding) error { return nil }
+func (r *BaseRule) GenerateFix(ctx *RuleContext, finding *Finding) ([]FixInstruction, error) {
+	return nil, nil
+}
 
 func (r *BaseRule) IsPlugin() bool { return r.IsPluginRule }
 

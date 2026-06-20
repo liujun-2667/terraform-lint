@@ -121,6 +121,41 @@ func (r *ResourceTagsRule) CanFix() bool {
 	return true
 }
 
-func (r *ResourceTagsRule) Fix(ctx *types.RuleContext, finding *types.Finding) error {
-	return nil
+func (r *ResourceTagsRule) GenerateFix(ctx *types.RuleContext, finding *types.Finding) ([]types.FixInstruction, error) {
+	hasTags := false
+	for _, res := range ctx.Resources {
+		if res.Type == finding.ResourceType && res.Name == finding.ResourceName {
+			if _, ok := res.Attributes["tags"]; ok {
+				hasTags = true
+			}
+			for _, block := range res.Blocks {
+				if block.Type == "tags" {
+					hasTags = true
+					break
+				}
+			}
+			break
+		}
+	}
+
+	if hasTags {
+		return nil, nil
+	}
+
+	tagsBlock := `tags = {
+  Environment = "dev"
+  Owner       = "team"
+}`
+
+	return []types.FixInstruction{
+		{
+			Action:       types.FixActionAppendAttribute,
+			ResourceType: finding.ResourceType,
+			ResourceName: finding.ResourceName,
+			Attribute:    "tags",
+			Content:      tagsBlock,
+			Line:         finding.Line,
+			Column:       finding.Column,
+		},
+	}, nil
 }

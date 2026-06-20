@@ -64,6 +64,23 @@ func (r *S3BucketEncryptionRule) CanFix() bool {
 	return true
 }
 
-func (r *S3BucketEncryptionRule) Fix(ctx *types.RuleContext, finding *types.Finding) error {
-	return nil
+func (r *S3BucketEncryptionRule) GenerateFix(ctx *types.RuleContext, finding *types.Finding) ([]types.FixInstruction, error) {
+	encryptionBlock := `server_side_encryption_configuration {
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}`
+
+	return []types.FixInstruction{
+		{
+			Action:       types.FixActionAppendBlock,
+			ResourceType: finding.ResourceType,
+			ResourceName: finding.ResourceName,
+			Content:      encryptionBlock,
+			Line:         finding.Line,
+			Column:       finding.Column,
+		},
+	}, nil
 }

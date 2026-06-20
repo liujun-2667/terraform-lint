@@ -45,8 +45,8 @@ func (r *SecurityGroupEgressAllRule) Check(ctx *types.RuleContext) []types.Findi
 									if !r.ShouldIgnore(ctx, block.Range.Start.Line) {
 										findings = append(findings, r.NewFinding(
 											ctx,
-											block.Range.Start.Line,
-											block.Range.Start.Column,
+											resource.Range.Start.Line,
+											resource.Range.Start.Column,
 											"Security group allows all egress traffic to 0.0.0.0/0",
 											resource.Type,
 											resource.Name,
@@ -62,4 +62,30 @@ func (r *SecurityGroupEgressAllRule) Check(ctx *types.RuleContext) []types.Findi
 	}
 
 	return findings
+}
+
+func (r *SecurityGroupEgressAllRule) CanFix() bool {
+	return true
+}
+
+func (r *SecurityGroupEgressAllRule) GenerateFix(ctx *types.RuleContext, finding *types.Finding) ([]types.FixInstruction, error) {
+	restrictiveEgress := `egress {
+  description = "Allow HTTPS egress"
+  from_port   = 443
+  to_port     = 443
+  protocol    = "tcp"
+  cidr_blocks = ["0.0.0.0/0"]
+}`
+
+	return []types.FixInstruction{
+		{
+			Action:       types.FixActionAppendBlock,
+			ResourceType: finding.ResourceType,
+			ResourceName: finding.ResourceName,
+			BlockType:    "egress",
+			Content:      restrictiveEgress,
+			Line:         finding.Line,
+			Column:       finding.Column,
+		},
+	}, nil
 }
