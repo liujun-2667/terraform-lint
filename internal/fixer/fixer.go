@@ -149,8 +149,10 @@ func (f *Fixer) fixFile(
 
 	conflictGroups := detectConflicts(&lines, fixableInstructions)
 
-	for _, iwf := range fixableInstructions {
-		if isSkippedByConflict(iwf, conflictGroups, fixableInstructions) {
+	for idx := 0; idx < len(fixableInstructions); idx++ {
+		iwf := fixableInstructions[idx]
+
+		if isSkippedByConflict(idx, conflictGroups, fixableInstructions) {
 			result := types.FixResult{
 				File:        filePath,
 				RuleID:      iwf.finding.RuleID,
@@ -627,6 +629,10 @@ func (f *Fixer) applyDeleteAttribute(lines *[]string, inst types.FixInstruction)
 	return result
 }
 
+func isAppendAction(action types.FixActionType) bool {
+	return action == types.FixActionAppendAttribute || action == types.FixActionAppendBlock
+}
+
 func getInstructionLineRange(lines *[]string, inst types.FixInstruction) (int, int) {
 	switch inst.Action {
 	case types.FixActionAppendAttribute, types.FixActionAppendBlock:
@@ -655,9 +661,38 @@ func detectConflicts(lines *[]string, instructions []instructionWithFinding) map
 	conflictGroups := make(map[int][]int)
 	for i := 0; i < len(instructions); i++ {
 		for j := i + 1; j < len(instructions); j++ {
-			if rangesOverlap(lineRanges[i].start, lineRanges[i].end, lineRanges[j].start, lineRanges[j].end) {
-				conflictGroups[i] = append(conflictGroups[i], j)
-				conflictGroups[j] = append(conflictGroups[j], i)
+			iIwf := instructions[i]
+			jIwf := instructions[j]
+
+			bothAppend := isAppendAction(iIwf.instruction.Action) && isAppendAction(jIwf.instruction.Action)
+			sameAttributeOrBlock := false
+			if bothAppend {
+				if iIwf.instruction.Action == types.FixActionAppendAttribute && jIwf.instruction.Action == types.FixActionAppendAttribute {
+					sameAttributeOrBlock = iIwf.instruction.Attribute == jIwf.instruction.Attribute
+				} else if iIwf.instruction.Action == types.FixActionAppendBlock && jIwf.instruction.Action == types.FixActionAppendBlock {
+					sameAttributeOrBlock = iIwf.instruction.BlockType == jIwf.instruction.BlockType
+				}
+			}
+
+			if bothAppend && !sameAttributeOrBlock {
+				continue
+			}
+
+			sameResource := iIwf.instruction.ResourceType == jIwf.instruction.ResourceType &&
+				iIwf.instruction.ResourceName == jIwf.instruction.ResourceName
+
+			if !sameResource && !rangesOverlap(lineRanges[i].start, lineRanges[i].end, lineRanges[j].start, lineRanges[j].end) {
+				continue
+			}
+
+			if sameResource || rangesOverlap(lineRanges[i].start, lineRanges[i].end, lineRanges[j].start, lineRanges[j].end) {
+				if bothAppend && sameAttributeOrBlock {
+					conflictGroups[i] = append(conflictGroups[i], j)
+					conflictGroups[j] = append(conflictGroups[j], i)
+				} else if !bothAppend {
+					conflictGroups[i] = append(conflictGroups[i], j)
+					conflictGroups[j] = append(conflictGroups[j], i)
+				}
 			}
 		}
 	}
@@ -665,32 +700,17 @@ func detectConflicts(lines *[]string, instructions []instructionWithFinding) map
 }
 
 func isSkippedByConflict(
-	iwf instructionWithFinding,
+	idx int,
 	conflictGroups map[int][]int,
 	allInstructions []instructionWithFinding,
 ) bool {
-	idx := -1
-	for i := range allInstructions {
-		inst := &allInstructions[i]
-		if inst.instruction.Line == iwf.instruction.Line &&
-			inst.instruction.Action == iwf.instruction.Action &&
-			inst.instruction.Attribute == iwf.instruction.Attribute &&
-			inst.finding.RuleID == iwf.finding.RuleID &&
-			inst.finding.Severity == iwf.finding.Severity {
-			idx = i
-			break
-		}
-	}
-	if idx == -1 {
-		return false
-	}
-
 	conflicts, ok := conflictGroups[idx]
 	if !ok {
 		return false
 	}
 
-	severity := iwf.finding.Severity.Value()
+	current := allInstructions[idx]
+	severity := current.finding.Severity.Value()
 	for _, conflictIdx := range conflicts {
 		conflictSeverity := allInstructions[conflictIdx].finding.Severity.Value()
 		if conflictSeverity > severity {

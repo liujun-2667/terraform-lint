@@ -59,6 +59,10 @@ func NewScanCommand() *cobra.Command {
 }
 
 func runScan(opts *scanOptions) error {
+	if opts.dryRun && !opts.fix {
+		return fmt.Errorf(color.RedString("--dry-run requires --fix flag. Usage: scan --fix --dry-run"))
+	}
+
 	configLoader := config.NewConfigLoader()
 	cfg, err := configLoader.Load(opts.configFile)
 	if err != nil {
