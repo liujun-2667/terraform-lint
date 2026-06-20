@@ -10,10 +10,13 @@ import (
 )
 
 type Fixer struct {
+	indentUnit string
 }
 
 func NewFixer() *Fixer {
-	return &Fixer{}
+	return &Fixer{
+		indentUnit: "  ",
+	}
 }
 
 type instructionWithFinding struct {
@@ -77,6 +80,8 @@ func (f *Fixer) fixFile(
 		return summary, fmt.Errorf("read file: %w", err)
 	}
 	lines := strings.Split(string(content), "\n")
+
+	f.indentUnit, _ = detectIndentStyle(lines)
 
 	var fixableInstructions []instructionWithFinding
 	ctx := getRuleContext(filePath)
@@ -194,14 +199,35 @@ func detectIndentStyle(lines []string) (string, int) {
 				}
 			}
 			if indentCount >= 2 {
-				if indentCount%2 == 0 {
-					return "  ", 2
-				}
 				return strings.Repeat(" ", indentCount), indentCount
 			}
 		}
 	}
 	return "  ", 2
+}
+
+func reindentContent(content, indentUnit string) string {
+	lines := strings.Split(content, "\n")
+	var result []string
+	for _, line := range lines {
+		if line == "" {
+			result = append(result, "")
+			continue
+		}
+		leadingSpaces := 0
+		for _, c := range line {
+			if c == ' ' {
+				leadingSpaces++
+			} else {
+				break
+			}
+		}
+		units := leadingSpaces / 2
+		remainder := leadingSpaces % 2
+		newIndent := strings.Repeat(indentUnit, units) + strings.Repeat(" ", remainder)
+		result = append(result, newIndent+line[leadingSpaces:])
+	}
+	return strings.Join(result, "\n")
 }
 
 func (f *Fixer) applyInstruction(lines *[]string, inst types.FixInstruction) types.FixResult {
@@ -267,12 +293,12 @@ func getLineIndent(line string) string {
 	return ""
 }
 
-func getBlockInnerIndent(lines []string, startLine int) string {
+func getBlockInnerIndent(lines []string, startLine int, indentUnit string) string {
 	if startLine < 1 || startLine > len(lines) {
-		return "  "
+		return indentUnit
 	}
 	outerIndent := getLineIndent(lines[startLine-1])
-	innerIndent := outerIndent + "  "
+	innerIndent := outerIndent + indentUnit
 
 	blockEnd := findBlockEnd(lines, startLine)
 	if blockEnd == -1 {
@@ -304,13 +330,15 @@ func (f *Fixer) applyAppendAttribute(lines *[]string, inst types.FixInstruction)
 		return result
 	}
 
-	attrIndent := getBlockInnerIndent(*lines, inst.Line)
+	attrIndent := getBlockInnerIndent(*lines, inst.Line, f.indentUnit)
 
-	contentLines := strings.Split(inst.Content, "\n")
+	reindentedContent := reindentContent(inst.Content, f.indentUnit)
+
+	contentLines := strings.Split(reindentedContent, "\n")
 	var indentedLines []string
-	for i, cl := range contentLines {
-		if i == 0 || cl == "" {
-			indentedLines = append(indentedLines, attrIndent+cl)
+	for _, cl := range contentLines {
+		if cl == "" {
+			indentedLines = append(indentedLines, "")
 		} else {
 			indentedLines = append(indentedLines, attrIndent+cl)
 		}
@@ -477,9 +505,11 @@ func (f *Fixer) applyAppendBlock(lines *[]string, inst types.FixInstruction) typ
 		return result
 	}
 
-	blockIndent := getBlockInnerIndent(*lines, inst.Line)
+	blockIndent := getBlockInnerIndent(*lines, inst.Line, f.indentUnit)
 
-	blockContentLines := strings.Split(inst.Content, "\n")
+	reindentedContent := reindentContent(inst.Content, f.indentUnit)
+
+	blockContentLines := strings.Split(reindentedContent, "\n")
 	var indentedBlockLines []string
 	for _, bl := range blockContentLines {
 		if bl == "" {
@@ -554,6 +584,8 @@ func (f *Fixer) ApplyFixInstructions(filePath string, instructions []types.FixIn
 	}
 
 	lines := strings.Split(string(content), "\n")
+
+	f.indentUnit, _ = detectIndentStyle(lines)
 
 	sort.Slice(instructions, func(i, j int) bool {
 		return instructions[i].Line > instructions[j].Line

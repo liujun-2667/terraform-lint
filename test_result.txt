@@ -1,0 +1,9 @@
+Exit: 1
+=== STDOUT ===
+FAIL	github.com/terraform-lint/terraform-lint/internal/fixer [setup failed]
+FAIL
+
+=== STDERR ===
+go: downloading github.com/hashicorp/hcl/v2 v2.19.1
+# github.com/terraform-lint/terraform-lint/internal/fixer
+internal\types\types.go:4:2: github.com/hashicorp/hcl/v2@v2.19.1: Get "https://proxy.golang.org/github.com/hashicorp/hcl/v2/@v/v2.19.1.zip": dial tcp 142.251.33.209:443: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.

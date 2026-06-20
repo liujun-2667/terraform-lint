@@ -1,6 +1,9 @@
 package bestpractice
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/terraform-lint/terraform-lint/internal/ast"
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
@@ -122,40 +125,99 @@ func (r *ResourceTagsRule) CanFix() bool {
 }
 
 func (r *ResourceTagsRule) GenerateFix(ctx *types.RuleContext, finding *types.Finding) ([]types.FixInstruction, error) {
-	hasTags := false
+	requiredTagsParam := r.GetParam("required_tags", []string{"Environment", "Owner"})
+	requiredTags, ok := requiredTagsParam.([]string)
+	if !ok {
+		requiredTags = []string{"Environment", "Owner"}
+	}
+
+	defaultTagValues := map[string]string{
+		"Environment": "dev",
+		"Owner":       "team",
+	}
+
 	for _, res := range ctx.Resources {
-		if res.Type == finding.ResourceType && res.Name == finding.ResourceName {
-			if _, ok := res.Attributes["tags"]; ok {
-				hasTags = true
+		if res.Type != finding.ResourceType || res.Name != finding.ResourceName {
+			continue
+		}
+
+		tagsLine := 0
+		hasTagsAttr := false
+		hasTagsMap := false
+
+		if tagsAttr, ok := res.Attributes["tags"]; ok {
+			hasTagsAttr = true
+			tagsLine = tagsAttr.Range.Start.Line
+			val, _, err := ast.GetAttributeValue(tagsAttr, nil)
+			if err == nil {
+				if _, ok := val.(map[string]interface{}); ok {
+					hasTagsMap = true
+				}
 			}
+		}
+
+		if !hasTagsMap {
 			for _, block := range res.Blocks {
 				if block.Type == "tags" {
-					hasTags = true
+					hasTagsAttr = true
+					hasTagsMap = true
+					tagsLine = block.Range.Start.Line
 					break
 				}
 			}
-			break
 		}
+
+		if !hasTagsAttr {
+			var tagsLines []string
+			tagsLines = append(tagsLines, "tags = {")
+			for _, tag := range requiredTags {
+				val := "changeme"
+				if v, ok := defaultTagValues[tag]; ok {
+					val = v
+				}
+				tagsLines = append(tagsLines, fmt.Sprintf("  %s = \"%s\"", tag, val))
+			}
+			tagsLines = append(tagsLines, "}")
+
+			return []types.FixInstruction{
+				{
+					Action:       types.FixActionAppendAttribute,
+					ResourceType: finding.ResourceType,
+					ResourceName: finding.ResourceName,
+					Attribute:    "tags",
+					Content:      strings.Join(tagsLines, "\n"),
+					Line:         finding.Line,
+					Column:       finding.Column,
+				},
+			}, nil
+		}
+
+		if !hasTagsMap {
+			return nil, nil
+		}
+
+		missingTag := strings.TrimPrefix(finding.Message, "Resource is missing required tag: ")
+		if missingTag == finding.Message {
+			return nil, nil
+		}
+
+		val := "changeme"
+		if v, ok := defaultTagValues[missingTag]; ok {
+			val = v
+		}
+
+		return []types.FixInstruction{
+			{
+				Action:       types.FixActionAppendAttribute,
+				ResourceType: finding.ResourceType,
+				ResourceName: finding.ResourceName,
+				Attribute:    missingTag,
+				Content:      fmt.Sprintf("%s = \"%s\"", missingTag, val),
+				Line:         tagsLine,
+				Column:       finding.Column,
+			},
+		}, nil
 	}
 
-	if hasTags {
-		return nil, nil
-	}
-
-	tagsBlock := `tags = {
-  Environment = "dev"
-  Owner       = "team"
-}`
-
-	return []types.FixInstruction{
-		{
-			Action:       types.FixActionAppendAttribute,
-			ResourceType: finding.ResourceType,
-			ResourceName: finding.ResourceName,
-			Attribute:    "tags",
-			Content:      tagsBlock,
-			Line:         finding.Line,
-			Column:       finding.Column,
-		},
-	}, nil
+	return nil, nil
 }
