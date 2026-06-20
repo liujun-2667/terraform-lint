@@ -3,17 +3,17 @@ package bestpractice
 import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type TerraformVersionRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewTerraformVersionRule() *TerraformVersionRule {
 	return &TerraformVersionRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"TERRAFORM_VERSION",
 			"Terraform Version Not Constrained",
 			"Terraform configuration should specify a required_version constraint",
@@ -39,7 +39,7 @@ func (r *TerraformVersionRule) Check(ctx *types.RuleContext) []types.Finding {
 	for _, block := range terraformContent.Blocks {
 		if block.Type == "terraform" {
 			attrContent, _, _ := block.Body.PartialContent(&hcl.BodySchema{
-				Attributes: []string{"required_version"},
+				Attributes: []hcl.AttributeSchema{{Name: "required_version"}},
 			})
 			if _, ok := attrContent.Attributes["required_version"]; ok {
 				hasVersionConstraint = true

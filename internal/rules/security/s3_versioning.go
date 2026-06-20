@@ -1,17 +1,17 @@
 package security
 
 import (
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type S3VersioningRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewS3VersioningRule() *S3VersioningRule {
 	return &S3VersioningRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"S3_BUCKET_VERSIONING",
 			"S3 Bucket Versioning Not Enabled",
 			"S3 buckets should have versioning enabled to prevent accidental data loss",

@@ -1,17 +1,17 @@
 package bestpractice
 
 import (
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type DataSourceUsageRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewDataSourceUsageRule() *DataSourceUsageRule {
 	return &DataSourceUsageRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"DATASOURCE_USAGE",
 			"Hardcoded Resource Reference",
 			"Consider using data sources instead of hardcoded resource IDs",

@@ -2,18 +2,18 @@ package security
 
 import (
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 	"github.com/terraform-lint/terraform-lint/internal/utils"
 )
 
 type OutputSensitiveRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewOutputSensitiveRule() *OutputSensitiveRule {
 	return &OutputSensitiveRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"OUTPUT_SENSITIVE",
 			"Output Exposes Sensitive Data",
 			"Outputs that expose sensitive data should be marked as sensitive = true",

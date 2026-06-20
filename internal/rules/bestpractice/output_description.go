@@ -1,17 +1,17 @@
 package bestpractice
 
 import (
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type OutputDescriptionRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewOutputDescriptionRule() *OutputDescriptionRule {
 	return &OutputDescriptionRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"OUTPUT_DESCRIPTION",
 			"Output Missing Description",
 			"Each output should have a description field",

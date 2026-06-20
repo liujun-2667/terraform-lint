@@ -1,20 +1,19 @@
 package security
 
 import (
-	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type S3BucketPublicACLRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewS3BucketPublicACLRule() *S3BucketPublicACLRule {
 	return &S3BucketPublicACLRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"S3_BUCKET_PUBLIC_ACL",
 			"S3 Bucket Public ACL Detected",
 			"S3 buckets should not use public-read or public-read-write ACLs",

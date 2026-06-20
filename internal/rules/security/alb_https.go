@@ -1,19 +1,18 @@
 package security
 
 import (
-	"github.com/hashicorp/hcl/v2"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type ALBHTTPSRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewALBHTTPSRule() *ALBHTTPSRule {
 	return &ALBHTTPSRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"ALB_HTTPS",
 			"ALB Listener Uses HTTP Instead of HTTPS",
 			"Load balancer listeners should use HTTPS for secure communication",

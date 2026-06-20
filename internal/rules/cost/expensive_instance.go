@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
@@ -30,12 +30,12 @@ var expensiveInstanceFamilies = map[string]bool{
 }
 
 type ExpensiveInstanceTypeRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewExpensiveInstanceTypeRule() *ExpensiveInstanceTypeRule {
 	return &ExpensiveInstanceTypeRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"EXPENSIVE_INSTANCE_TYPE",
 			"Expensive Instance Type Detected",
 			"Consider if a cheaper instance type would be sufficient for your workload",

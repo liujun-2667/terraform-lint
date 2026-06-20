@@ -2,17 +2,17 @@ package bestpractice
 
 import (
 	"github.com/hashicorp/hcl/v2"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type ProvisionerUsageRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewProvisionerUsageRule() *ProvisionerUsageRule {
 	return &ProvisionerUsageRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"PROVISIONER_USAGE",
 			"Provisioner Usage Detected",
 			"Consider using configuration management tools instead of provisioners when possible",

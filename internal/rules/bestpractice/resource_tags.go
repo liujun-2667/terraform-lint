@@ -1,14 +1,12 @@
 package bestpractice
 
 import (
-	"github.com/hashicorp/hcl/v2"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type ResourceTagsRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 var taggableResources = map[string]bool{
@@ -53,7 +51,7 @@ var taggableResources = map[string]bool{
 
 func NewResourceTagsRule() *ResourceTagsRule {
 	return &ResourceTagsRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"RESOURCE_TAGS",
 			"Missing Required Tags",
 			"Resources should have required tags (Environment, Owner by default)",
@@ -96,10 +94,7 @@ func (r *ResourceTagsRule) Check(ctx *types.RuleContext) []types.Finding {
 
 		for _, block := range resource.Blocks {
 			if block.Type == "tags" {
-				attrContent, _, _ := block.Body.PartialContent(&hcl.BodySchema{
-					Attributes: []string{"*"},
-				})
-				for k := range attrContent.Attributes {
+				for k := range block.Attributes {
 					resourceTags[k] = true
 				}
 			}

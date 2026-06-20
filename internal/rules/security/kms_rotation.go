@@ -2,17 +2,17 @@ package security
 
 import (
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type KMSRotationRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewKMSRotationRule() *KMSRotationRule {
 	return &KMSRotationRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"KMS_ROTATION",
 			"KMS Key Rotation Not Enabled",
 			"KMS keys should have automatic rotation enabled",

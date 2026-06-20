@@ -3,17 +3,17 @@ package security
 import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type EBSEncryptionRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewEBSEncryptionRule() *EBSEncryptionRule {
 	return &EBSEncryptionRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"EBS_ENCRYPTION",
 			"EBS Volume Encryption Not Enabled",
 			"EBS volumes should have encryption enabled",
@@ -76,7 +76,7 @@ func (r *EBSEncryptionRule) Check(ctx *types.RuleContext) []types.Finding {
 			for _, block := range resource.Blocks {
 				if block.Type == "root_block_device" || block.Type == "ebs_block_device" {
 					attrContent, _, _ := block.Body.PartialContent(&hcl.BodySchema{
-						Attributes: []string{"encrypted"},
+						Attributes: []hcl.AttributeSchema{{Name: "encrypted"}},
 					})
 					if encAttr, ok := attrContent.Attributes["encrypted"]; ok {
 						val, _, err := ast.GetAttributeValue(encAttr, nil)

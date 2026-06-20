@@ -18,6 +18,7 @@ import (
 func NewRulesCommand() *cobra.Command {
 	var configFile string
 	var category string
+	var pluginDir string
 
 	cmd := &cobra.Command{
 		Use:   "rules",
@@ -31,6 +32,11 @@ func NewRulesCommand() *cobra.Command {
 			}
 
 			ruleRegistry := rules.NewDefaultRuleRegistry()
+
+			if err := ruleRegistry.LoadPlugins(pluginDir); err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: failed to load plugin rules: %v\n", err)
+			}
+
 			if cfg != nil {
 				ruleRegistry.ApplyConfig(cfg)
 			}
@@ -39,6 +45,9 @@ func NewRulesCommand() *cobra.Command {
 			sort.Slice(allRules, func(i, j int) bool {
 				if allRules[i].Category() != allRules[j].Category() {
 					return allRules[i].Category() < allRules[j].Category()
+				}
+				if allRules[i].IsPlugin() != allRules[j].IsPlugin() {
+					return !allRules[i].IsPlugin()
 				}
 				return allRules[i].ID() < allRules[j].ID()
 			})
@@ -57,6 +66,7 @@ func NewRulesCommand() *cobra.Command {
 			table.SetNoWhiteSpace(true)
 
 			var totalEnabled, totalDisabled int
+			var totalPlugin int
 			categoryCount := make(map[string]int)
 
 			for _, rule := range allRules {
@@ -88,8 +98,17 @@ func NewRulesCommand() *cobra.Command {
 					totalDisabled++
 				}
 
+				if rule.IsPlugin() {
+					totalPlugin++
+				}
+
+				ruleID := rule.ID()
+				if rule.IsPlugin() {
+					ruleID = ruleID + " " + color.MagentaString("[plugin]")
+				}
+
 				table.Append([]string{
-					color.CyanString(rule.ID()),
+					color.CyanString(ruleID),
 					categoryStr,
 					severityStr,
 					status,
@@ -105,6 +124,9 @@ func NewRulesCommand() *cobra.Command {
 				color.GreenString("%d enabled", totalEnabled),
 				color.RedString("%d disabled", totalDisabled),
 			)
+			if totalPlugin > 0 {
+				fmt.Printf("  %s: %d\n", color.MagentaString("plugin rules"), totalPlugin)
+			}
 
 			for cat, count := range categoryCount {
 				fmt.Printf("  %s: %d\n", strings.Title(strings.ReplaceAll(cat, "_", " ")), count)
@@ -116,6 +138,7 @@ func NewRulesCommand() *cobra.Command {
 
 	cmd.Flags().StringVar(&configFile, "config", "", "Path to configuration file")
 	cmd.Flags().StringVarP(&category, "category", "c", "", "Filter by category (security, best_practice, cost)")
+	cmd.Flags().StringVar(&pluginDir, "plugin-dir", "rules", "Directory containing custom rule plugins")
 
 	return cmd
 }

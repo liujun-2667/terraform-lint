@@ -1,10 +1,15 @@
 package rules
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/terraform-lint/terraform-lint/internal/rules/security"
 	"github.com/terraform-lint/terraform-lint/internal/rules/bestpractice"
 	"github.com/terraform-lint/terraform-lint/internal/rules/cost"
 	"github.com/terraform-lint/terraform-lint/internal/types"
+	"github.com/terraform-lint/terraform-lint/internal/plugin"
 )
 
 type RuleRegistry struct {
@@ -42,6 +47,33 @@ func (r *RuleRegistry) GetEnabled() []types.Rule {
 func (r *RuleRegistry) GetByID(id string) (types.Rule, bool) {
 	rule, ok := r.rules[id]
 	return rule, ok
+}
+
+func (r *RuleRegistry) LoadPlugins(pluginDir string) error {
+	absPath, err := filepath.Abs(pluginDir)
+	if err != nil {
+		return fmt.Errorf("resolving plugin directory: %w", err)
+	}
+
+	if _, err := os.Stat(absPath); os.IsNotExist(err) {
+		return nil
+	}
+
+	loader := plugin.NewPluginLoader(absPath)
+	pluginRules, err := loader.Load()
+	if err != nil {
+		return fmt.Errorf("loading plugin rules: %w", err)
+	}
+
+	for _, rule := range pluginRules {
+		if _, exists := r.rules[rule.ID()]; exists {
+			fmt.Fprintf(os.Stderr, "Warning: plugin rule %s conflicts with built-in rule, skipping\n", rule.ID())
+			continue
+		}
+		r.Register(rule)
+	}
+
+	return nil
 }
 
 func (r *RuleRegistry) ApplyConfig(config *types.Config) {

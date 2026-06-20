@@ -3,17 +3,17 @@ package cost
 import (
 	"strconv"
 
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type NATGatewayCountRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewNATGatewayCountRule() *NATGatewayCountRule {
 	return &NATGatewayCountRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"NAT_GATEWAY_COUNT",
 			"High Number of NAT Gateways",
 			"Consider if all NAT gateways are necessary - they incur hourly costs",

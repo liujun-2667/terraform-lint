@@ -2,17 +2,17 @@ package cost
 
 import (
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type UnusedLoadBalancerRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewUnusedLoadBalancerRule() *UnusedLoadBalancerRule {
 	return &UnusedLoadBalancerRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"UNUSED_LOAD_BALANCER",
 			"Potential Unused Load Balancer",
 			"Load balancers with no targets incur unnecessary costs",

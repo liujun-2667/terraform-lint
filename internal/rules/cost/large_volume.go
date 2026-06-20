@@ -4,17 +4,17 @@ import (
 	"strconv"
 
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type LargeVolumeSizeRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewLargeVolumeSizeRule() *LargeVolumeSizeRule {
 	return &LargeVolumeSizeRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"LARGE_VOLUME_SIZE",
 			"Large EBS Volume Size",
 			"Consider if a smaller volume size would be sufficient",

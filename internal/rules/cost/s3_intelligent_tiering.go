@@ -2,17 +2,17 @@ package cost
 
 import (
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type S3IntelligentTieringRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewS3IntelligentTieringRule() *S3IntelligentTieringRule {
 	return &S3IntelligentTieringRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"S3_INTELLIGENT_TIERING",
 			"S3 Intelligent Tiering Not Configured",
 			"Consider enabling S3 Intelligent Tiering for cost optimization on unpredictable access patterns",

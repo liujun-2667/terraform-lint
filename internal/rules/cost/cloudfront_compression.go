@@ -2,17 +2,17 @@ package cost
 
 import (
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type CloudFrontCompressionRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewCloudFrontCompressionRule() *CloudFrontCompressionRule {
 	return &CloudFrontCompressionRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"CLOUDFRONT_COMPRESSION",
 			"CloudFront Compression Not Enabled",
 			"Consider enabling automatic compression on CloudFront distribution to reduce bandwidth costs",

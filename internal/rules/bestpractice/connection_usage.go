@@ -2,17 +2,17 @@ package bestpractice
 
 import (
 	"github.com/hashicorp/hcl/v2"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type ConnectionUsageRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewConnectionUsageRule() *ConnectionUsageRule {
 	return &ConnectionUsageRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"CONNECTION_USAGE",
 			"Connection Block Detected",
 			"Connection blocks may expose sensitive credentials - use SSH keys or other secure methods",

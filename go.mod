@@ -7,6 +7,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.19.1
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/spf13/cobra v1.8.0
+	github.com/traefik/yaegi v0.16.0
 	github.com/zclconf/go-cty v1.14.4
 	gopkg.in/yaml.v3 v3.0.1
 )

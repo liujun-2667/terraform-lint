@@ -161,6 +161,40 @@ func (p *Parser) parseModuleDependencies(ctx *types.RuleContext) {
 	}
 }
 
+func (p *Parser) ParseFiles(files []string) ([]*types.RuleContext, []ParseError) {
+	fileContexts := make([]*types.RuleContext, 0)
+	var wg sync.WaitGroup
+	semaphore := make(chan struct{}, p.maxWorkers)
+	results := make(chan *parseResult, len(files))
+
+	for _, file := range files {
+		wg.Add(1)
+		semaphore <- struct{}{}
+		go func(f string) {
+			defer wg.Done()
+			defer func() { <-semaphore }()
+			results <- p.parseFile(f)
+		}(file)
+	}
+
+	wg.Wait()
+	close(results)
+
+	for result := range results {
+		if result.Err != nil {
+			p.mu.Lock()
+			p.parseErrors = append(p.parseErrors, *result.Err)
+			p.mu.Unlock()
+			continue
+		}
+		if result.Context != nil {
+			fileContexts = append(fileContexts, result.Context)
+		}
+	}
+
+	return fileContexts, p.parseErrors
+}
+
 func (p *Parser) GetParseErrors() []ParseError {
 	return p.parseErrors
 }

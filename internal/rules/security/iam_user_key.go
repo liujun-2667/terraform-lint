@@ -1,17 +1,17 @@
 package security
 
 import (
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type IAMUserAccessKeyRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewIAMUserAccessKeyRule() *IAMUserAccessKeyRule {
 	return &IAMUserAccessKeyRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"IAM_USER_ACCESS_KEY",
 			"IAM User Has Access Key",
 			"IAM users should not have access keys - use roles instead",

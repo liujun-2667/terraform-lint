@@ -4,19 +4,18 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/hashicorp/hcl/v2"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type ECSPrivilegedRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewECSPrivilegedRule() *ECSPrivilegedRule {
 	return &ECSPrivilegedRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"ECS_PRIVILEGED",
 			"ECS Task Definition Has Privileged Mode",
 			"ECS task definitions should not run in privileged mode",

@@ -3,17 +3,17 @@ package security
 import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type SecurityGroupAllPortsRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewSecurityGroupAllPortsRule() *SecurityGroupAllPortsRule {
 	return &SecurityGroupAllPortsRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"SECURITY_GROUP_ALL_PORTS",
 			"Security Group Allows All Ports",
 			"Security group rules should not allow all ports (0-65535)",
@@ -53,7 +53,7 @@ func (r *SecurityGroupAllPortsRule) checkPortsBlock(ctx *types.RuleContext, bloc
 	var findings []types.Finding
 
 	attrContent, _, _ := block.Body.PartialContent(&hcl.BodySchema{
-		Attributes: []string{"from_port", "to_port"},
+		Attributes: []hcl.AttributeSchema{{Name: "from_port"}, {Name: "to_port"}},
 	})
 
 	fromPort := -1

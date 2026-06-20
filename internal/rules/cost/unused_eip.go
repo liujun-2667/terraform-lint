@@ -2,17 +2,17 @@ package cost
 
 import (
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type UnusedEIPRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewUnusedEIPRule() *UnusedEIPRule {
 	return &UnusedEIPRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"UNUSED_EIP",
 			"Potential Unused Elastic IP",
 			"Elastic IPs that are not associated with instances incur costs",

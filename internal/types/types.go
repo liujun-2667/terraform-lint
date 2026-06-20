@@ -47,6 +47,7 @@ type Rule interface {
 	Check(ctx *RuleContext) []Finding
 	CanFix() bool
 	Fix(ctx *RuleContext, finding *Finding) error
+	IsPlugin() bool
 }
 
 type RuleContext struct {
@@ -187,6 +188,7 @@ type BaseRule struct {
 	RuleCategory    RuleCategory
 	RuleEnabled     bool
 	Params          map[string]interface{}
+	IsPluginRule    bool
 }
 
 func NewBaseRule(
@@ -212,6 +214,10 @@ func (r *BaseRule) Category() RuleCategory { return r.RuleCategory }
 func (r *BaseRule) Enabled() bool          { return r.RuleEnabled }
 func (r *BaseRule) SetEnabled(enabled bool) { r.RuleEnabled = enabled }
 func (r *BaseRule) SetSeverity(severity Severity) { r.RuleSeverity = severity }
+func (r *BaseRule) SetID(id string) { r.RuleID = id }
+func (r *BaseRule) SetName(name string) { r.RuleName = name }
+func (r *BaseRule) SetDescription(desc string) { r.RuleDescription = desc }
+func (r *BaseRule) SetCategory(cat RuleCategory) { r.RuleCategory = cat }
 
 func (r *BaseRule) SetParams(params map[string]interface{}) {
 	r.Params = params
@@ -230,6 +236,10 @@ func (r *BaseRule) GetParam(key string, defaultValue interface{}) interface{} {
 func (r *BaseRule) CanFix() bool { return false }
 
 func (r *BaseRule) Fix(ctx *RuleContext, finding *Finding) error { return nil }
+
+func (r *BaseRule) IsPlugin() bool { return r.IsPluginRule }
+
+func (r *BaseRule) SetIsPlugin(isPlugin bool) { r.IsPluginRule = isPlugin }
 
 func (r *BaseRule) NewFinding(
 	ctx *RuleContext,

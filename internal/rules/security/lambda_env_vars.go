@@ -3,18 +3,18 @@ package security
 import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 	"github.com/terraform-lint/terraform-lint/internal/utils"
 )
 
 type LambdaEnvVarsRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewLambdaEnvVarsRule() *LambdaEnvVarsRule {
 	return &LambdaEnvVarsRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"LAMBDA_ENV_VARS",
 			"Lambda Environment Variables Contain Sensitive Data",
 			"Lambda function environment variables should not contain sensitive data in plaintext",
@@ -39,7 +39,7 @@ func (r *LambdaEnvVarsRule) Check(ctx *types.RuleContext) []types.Finding {
 		for _, block := range resource.Blocks {
 			if block.Type == "environment" {
 				attrContent, _, _ := block.Body.PartialContent(&hcl.BodySchema{
-					Attributes: []string{"variables"},
+					Attributes: []hcl.AttributeSchema{{Name: "variables"}},
 				})
 				if varsAttr, ok := attrContent.Attributes["variables"]; ok {
 					val, _, err := ast.GetAttributeValue(varsAttr, nil)

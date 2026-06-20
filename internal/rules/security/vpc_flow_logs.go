@@ -2,17 +2,17 @@ package security
 
 import (
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type VPCFlowLogsRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewVPCFlowLogsRule() *VPCFlowLogsRule {
 	return &VPCFlowLogsRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"VPC_FLOW_LOGS",
 			"VPC Flow Logs Not Enabled",
 			"VPCs should have flow logs enabled for network traffic monitoring",

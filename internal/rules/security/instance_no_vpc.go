@@ -1,17 +1,17 @@
 package security
 
 import (
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type InstanceNoVPCRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewInstanceNoVPCRule() *InstanceNoVPCRule {
 	return &InstanceNoVPCRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"INSTANCE_NO_VPC",
 			"EC2 Instance Not in VPC",
 			"EC2 instances should be launched in a VPC, not in EC2-Classic",

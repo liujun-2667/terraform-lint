@@ -1,17 +1,17 @@
 package security
 
 import (
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type RedshiftAuditLoggingRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewRedshiftAuditLoggingRule() *RedshiftAuditLoggingRule {
 	return &RedshiftAuditLoggingRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"REDSHIFT_AUDIT_LOGGING",
 			"Redshift Cluster Audit Logging Not Enabled",
 			"Redshift clusters should have audit logging enabled",

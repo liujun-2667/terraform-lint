@@ -1,17 +1,17 @@
 package bestpractice
 
 import (
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type VariableTypeRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewVariableTypeRule() *VariableTypeRule {
 	return &VariableTypeRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"VARIABLE_TYPE",
 			"Variable Missing Type Constraint",
 			"Variables should have an explicit type constraint",

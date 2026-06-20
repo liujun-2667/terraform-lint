@@ -2,17 +2,17 @@ package bestpractice
 
 import (
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type ResourceCountRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewResourceCountRule() *ResourceCountRule {
 	return &ResourceCountRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"RESOURCE_COUNT",
 			"Consider Using for_each Instead of count",
 			"For resources that may need individual management, consider using for_each instead of count",

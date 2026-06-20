@@ -3,17 +3,17 @@ package security
 import (
 	"encoding/json"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type SQSPublicAccessRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewSQSPublicAccessRule() *SQSPublicAccessRule {
 	return &SQSPublicAccessRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"SQS_PUBLIC_ACCESS",
 			"SQS Queue Allows Public Access",
 			"SQS queue policies should not allow public access",

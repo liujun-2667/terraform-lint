@@ -3,17 +3,17 @@ package bestpractice
 import (
 	"strings"
 
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type ModuleVersionRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewModuleVersionRule() *ModuleVersionRule {
 	return &ModuleVersionRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"MODULE_VERSION",
 			"Registry Module Missing Version Constraint",
 			"Registry modules should have explicit version constraints",

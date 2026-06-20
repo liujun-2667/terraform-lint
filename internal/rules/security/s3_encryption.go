@@ -1,19 +1,18 @@
 package security
 
 import (
-	"github.com/hashicorp/hcl/v2"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type S3BucketEncryptionRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewS3BucketEncryptionRule() *S3BucketEncryptionRule {
 	return &S3BucketEncryptionRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"S3_BUCKET_ENCRYPTION",
 			"S3 Bucket Encryption Not Enabled",
 			"S3 buckets should have server-side encryption enabled to protect data at rest",

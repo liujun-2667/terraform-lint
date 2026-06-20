@@ -26,6 +26,7 @@ type scanOptions struct {
 	changedOnly bool
 	fix         bool
 	concurrency int
+	pluginDir   string
 }
 
 func NewScanCommand() *cobra.Command {
@@ -48,6 +49,7 @@ func NewScanCommand() *cobra.Command {
 	cmd.Flags().BoolVar(&opts.changedOnly, "changed-only", false, "Only scan changed files (git diff)")
 	cmd.Flags().BoolVar(&opts.fix, "fix", false, "Automatically fix issues when possible")
 	cmd.Flags().IntVar(&opts.concurrency, "concurrency", 4, "Number of concurrent workers")
+	cmd.Flags().StringVar(&opts.pluginDir, "plugin-dir", "rules", "Directory containing custom rule plugins")
 
 	return cmd
 }
@@ -60,6 +62,11 @@ func runScan(opts *scanOptions) error {
 	}
 
 	ruleRegistry := rules.NewDefaultRuleRegistry()
+
+	if err := ruleRegistry.LoadPlugins(opts.pluginDir); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to load plugin rules: %v\n", err)
+	}
+
 	if cfg != nil {
 		ruleRegistry.ApplyConfig(cfg)
 	}

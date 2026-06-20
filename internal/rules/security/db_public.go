@@ -2,17 +2,17 @@ package security
 
 import (
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type DBPubliclyAccessibleRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewDBPubliclyAccessibleRule() *DBPubliclyAccessibleRule {
 	return &DBPubliclyAccessibleRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"DB_PUBLICLY_ACCESSIBLE",
 			"Database Publicly Accessible",
 			"Database instances should not be publicly accessible",

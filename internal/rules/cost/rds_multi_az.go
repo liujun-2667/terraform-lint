@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
@@ -20,12 +20,12 @@ var smallInstanceClasses = map[string]bool{
 }
 
 type RDSMultiAZSmallRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewRDSMultiAZSmallRule() *RDSMultiAZSmallRule {
 	return &RDSMultiAZSmallRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"RDS_MULTI_AZ_SMALL",
 			"Multi-AZ for Small RDS Instance",
 			"Consider if Multi-AZ is necessary for small instance types",

@@ -3,17 +3,17 @@ package security
 import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type ECRScanningRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewECRScanningRule() *ECRScanningRule {
 	return &ECRScanningRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"ECR_SCANNING",
 			"ECR Repository Image Scanning Not Enabled",
 			"ECR repositories should have image scanning enabled to detect vulnerabilities",
@@ -39,7 +39,7 @@ func (r *ECRScanningRule) Check(ctx *types.RuleContext) []types.Finding {
 		for _, block := range resource.Blocks {
 			if block.Type == "image_scanning_configuration" {
 				attrContent, _, _ := block.Body.PartialContent(&hcl.BodySchema{
-					Attributes: []string{"scan_on_push"},
+					Attributes: []hcl.AttributeSchema{{Name: "scan_on_push"}},
 				})
 				if scanAttr, ok := attrContent.Attributes["scan_on_push"]; ok {
 					val, _, err := ast.GetAttributeValue(scanAttr, nil)

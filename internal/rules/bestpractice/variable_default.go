@@ -1,17 +1,17 @@
 package bestpractice
 
 import (
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type VariableDefaultRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewVariableDefaultRule() *VariableDefaultRule {
 	return &VariableDefaultRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"VARIABLE_DEFAULT",
 			"Variable Has No Default Value",
 			"Consider providing a default value for variables that are commonly used",

@@ -2,17 +2,17 @@ package security
 
 import (
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type CloudTrailEnabledRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewCloudTrailEnabledRule() *CloudTrailEnabledRule {
 	return &CloudTrailEnabledRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"CLOUDTRAIL_ENABLED",
 			"CloudTrail Not Enabled",
 			"CloudTrail should be enabled for API activity logging",

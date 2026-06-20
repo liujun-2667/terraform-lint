@@ -3,17 +3,17 @@ package security
 import (
 	"encoding/json"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type S3BucketPolicyPublicRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewS3BucketPolicyPublicRule() *S3BucketPolicyPublicRule {
 	return &S3BucketPolicyPublicRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"S3_BUCKET_POLICY_PUBLIC",
 			"S3 Bucket Policy Allows Public Access",
 			"S3 bucket policies should not allow public access",

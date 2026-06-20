@@ -2,18 +2,18 @@ package security
 
 import (
 	"fmt"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 	"github.com/terraform-lint/terraform-lint/internal/utils"
 )
 
 type SensitiveDataRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewSensitiveDataRule() *SensitiveDataRule {
 	return &SensitiveDataRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"SENSITIVE_DATA",
 			"Potential Sensitive Data in Plaintext",
 			"Variables should not contain sensitive data like AWS keys or passwords in default values",

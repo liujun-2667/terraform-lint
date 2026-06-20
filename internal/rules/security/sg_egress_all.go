@@ -3,17 +3,17 @@ package security
 import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type SecurityGroupEgressAllRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewSecurityGroupEgressAllRule() *SecurityGroupEgressAllRule {
 	return &SecurityGroupEgressAllRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"SECURITY_GROUP_EGRESS_ALL",
 			"Security Group Allows All Egress Traffic",
 			"Security groups should restrict egress traffic to necessary destinations",
@@ -38,7 +38,7 @@ func (r *SecurityGroupEgressAllRule) Check(ctx *types.RuleContext) []types.Findi
 		for _, block := range resource.Blocks {
 			if block.Type == "egress" {
 				attrContent, _, _ := block.Body.PartialContent(&hcl.BodySchema{
-					Attributes: []string{"cidr_blocks"},
+					Attributes: []hcl.AttributeSchema{{Name: "cidr_blocks"}},
 				})
 				if cidrAttr, ok := attrContent.Attributes["cidr_blocks"]; ok {
 					val, _, err := ast.GetAttributeValue(cidrAttr, nil)

@@ -3,17 +3,17 @@ package bestpractice
 import (
 	"strings"
 
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type ResourcePrefixRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewResourcePrefixRule() *ResourcePrefixRule {
 	return &ResourcePrefixRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"RESOURCE_PREFIX",
 			"Resource Name Has Redundant Prefix",
 			"Resource names should not include the resource type prefix (e.g., aws_)",

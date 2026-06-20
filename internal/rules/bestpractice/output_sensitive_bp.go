@@ -3,17 +3,17 @@ package bestpractice
 import (
 	"strings"
 
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type OutputSensitiveRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewOutputSensitiveRule() *OutputSensitiveRule {
 	return &OutputSensitiveRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"OUTPUT_SENSITIVE_BP",
 			"Output May Contain Sensitive Data",
 			"Outputs that may contain sensitive data should be marked as sensitive",

@@ -2,17 +2,17 @@ package bestpractice
 
 import (
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type ProviderVersionRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewProviderVersionRule() *ProviderVersionRule {
 	return &ProviderVersionRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"PROVIDER_VERSION",
 			"Provider Missing Version Constraint",
 			"Providers should have explicit version constraints in required_providers",

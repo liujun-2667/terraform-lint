@@ -91,15 +91,13 @@ func (s *Scanner) Scan(dir string) (*types.ScanResult, []parser.ParseError, erro
 func (s *Scanner) ScanFiles(files []string) (*types.ScanResult, []parser.ParseError, error) {
 	startTime := time.Now()
 
-	var contexts []*types.RuleContext
-	var allParseErrors []parser.ParseError
-
-	for _, file := range files {
-		p := parser.NewParser(".", []string{}, s.maxWorkers)
-		fileContexts, parseErrors := p.ParseAll()
-		contexts = append(contexts, fileContexts...)
-		allParseErrors = append(allParseErrors, parseErrors...)
+	ignorePaths := []string{}
+	if s.config != nil {
+		ignorePaths = s.config.IgnorePaths
 	}
+
+	p := parser.NewParser(".", ignorePaths, s.maxWorkers)
+	contexts, parseErrors := p.ParseFiles(files)
 
 	var findings []types.Finding
 	var mu sync.Mutex
@@ -149,5 +147,5 @@ func (s *Scanner) ScanFiles(files []string) (*types.ScanResult, []parser.ParseEr
 		Duration:     duration.String(),
 	}
 
-	return result, allParseErrors, nil
+	return result, parseErrors, nil
 }

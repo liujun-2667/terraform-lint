@@ -1,17 +1,17 @@
 package bestpractice
 
 import (
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type ResourceDescriptionRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewResourceDescriptionRule() *ResourceDescriptionRule {
 	return &ResourceDescriptionRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"RESOURCE_DESCRIPTION",
 			"Resource Missing Description",
 			"Consider adding a description attribute to resources for better documentation",

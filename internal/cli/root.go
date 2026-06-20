@@ -21,6 +21,7 @@ and cost optimization opportunities.`,
 	rootCmd.AddCommand(NewInitCommand())
 	rootCmd.AddCommand(NewRulesCommand())
 	rootCmd.AddCommand(NewVersionCommand())
+	rootCmd.AddCommand(NewTestCommand())
 
 	return rootCmd
 }

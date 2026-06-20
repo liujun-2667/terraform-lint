@@ -45,12 +45,11 @@ func ExtractResources(file *types.ParsedFile) []types.Resource {
 			resName := block.Labels[1]
 			attrs := make(map[string]hcl.Expression)
 
-			attrContent, _, _ := block.Body.PartialContent(&hcl.BodySchema{
-				Attributes: []string{"*"},
-			})
-
-			for name, attr := range attrContent.Attributes {
-				attrs[name] = attr.Expr
+			syntaxBody, ok := block.Body.(*hclsyntax.Body)
+			if ok {
+				for name, attr := range syntaxBody.Attributes {
+					attrs[name] = attr.Expr
+				}
 			}
 
 			resource := types.Resource{
@@ -90,7 +89,12 @@ func ExtractVariables(file *types.ParsedFile) map[string]types.Variable {
 			}
 
 			attrContent, _, _ := block.Body.PartialContent(&hcl.BodySchema{
-				Attributes: []string{"description", "type", "default", "sensitive"},
+				Attributes: []hcl.AttributeSchema{
+					{Name: "description"},
+					{Name: "type"},
+					{Name: "default"},
+					{Name: "sensitive"},
+				},
 			})
 
 			if attr, ok := attrContent.Attributes["description"]; ok {
@@ -145,7 +149,11 @@ func ExtractOutputs(file *types.ParsedFile) []types.Output {
 			}
 
 			attrContent, _, _ := block.Body.PartialContent(&hcl.BodySchema{
-				Attributes: []string{"description", "value", "sensitive"},
+				Attributes: []hcl.AttributeSchema{
+					{Name: "description"},
+					{Name: "value"},
+					{Name: "sensitive"},
+				},
 			})
 
 			if attr, ok := attrContent.Attributes["description"]; ok {
@@ -194,7 +202,10 @@ func ExtractModuleCalls(file *types.ParsedFile) []types.ModuleCall {
 			}
 
 			attrContent, _, _ := block.Body.PartialContent(&hcl.BodySchema{
-				Attributes: []string{"source", "version"},
+				Attributes: []hcl.AttributeSchema{
+					{Name: "source"},
+					{Name: "version"},
+				},
 			})
 
 			if attr, ok := attrContent.Attributes["source"]; ok {
@@ -295,11 +306,12 @@ func ExtractRequiredProviders(file *types.ParsedFile) map[string]string {
 		})
 
 		for _, block := range reqContent.Blocks {
-			attrContent, _, _ := block.Body.PartialContent(&hcl.BodySchema{
-				Attributes: []string{"*"},
-			})
+			syntaxBody, ok := block.Body.(*hclsyntax.Body)
+			if !ok {
+				continue
+			}
 
-			for name, attr := range attrContent.Attributes {
+			for name, attr := range syntaxBody.Attributes {
 				val, _ := attr.Expr.Value(nil)
 				if val.Type().IsObjectType() {
 					if versionVal := val.GetAttr("version"); !versionVal.IsNull() && versionVal.Type() == cty.String {
@@ -326,11 +338,12 @@ func ExtractLocals(file *types.ParsedFile) map[string]interface{} {
 	}
 
 	for _, block := range bodyContent.Blocks {
-		attrContent, _, _ := block.Body.PartialContent(&hcl.BodySchema{
-			Attributes: []string{"*"},
-		})
+		syntaxBody, ok := block.Body.(*hclsyntax.Body)
+		if !ok {
+			continue
+		}
 
-		for name, attr := range attrContent.Attributes {
+		for name, attr := range syntaxBody.Attributes {
 			val, _ := attr.Expr.Value(nil)
 			if !val.IsNull() {
 				locals[name] = ctyValueToInterface(val)

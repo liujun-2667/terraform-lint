@@ -1,7 +1,7 @@
 package bestpractice
 
 import (
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
@@ -11,12 +11,12 @@ var deprecatedResources = map[string]string{
 }
 
 type DeprecatedResourceRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewDeprecatedResourceRule() *DeprecatedResourceRule {
 	return &DeprecatedResourceRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"DEPRECATED_RESOURCE",
 			"Deprecated Resource Type",
 			"Resource type is deprecated, consider using the recommended alternative",

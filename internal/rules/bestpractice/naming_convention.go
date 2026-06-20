@@ -3,18 +3,18 @@ package bestpractice
 import (
 	"regexp"
 
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 	"github.com/terraform-lint/terraform-lint/internal/utils"
 )
 
 type NamingConventionRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewNamingConventionRule() *NamingConventionRule {
 	return &NamingConventionRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"NAMING_CONVENTION",
 			"Naming Convention Violation",
 			"Resource and variable names should follow snake_case naming convention",

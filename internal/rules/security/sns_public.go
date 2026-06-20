@@ -3,17 +3,17 @@ package security
 import (
 	"encoding/json"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type SNSPublicAccessRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewSNSPublicAccessRule() *SNSPublicAccessRule {
 	return &SNSPublicAccessRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"SNS_PUBLIC_ACCESS",
 			"SNS Topic Allows Public Access",
 			"SNS topic policies should not allow public access",

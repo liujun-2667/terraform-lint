@@ -4,17 +4,17 @@ import (
 	"strconv"
 
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type ExcessiveProvisionedIOPSRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewExcessiveProvisionedIOPSRule() *ExcessiveProvisionedIOPSRule {
 	return &ExcessiveProvisionedIOPSRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"EXCESSIVE_PROVISIONED_IOPS",
 			"Excessive Provisioned IOPS",
 			"Consider if provisioned IOPS are necessary or if gp3 would be more cost-effective",

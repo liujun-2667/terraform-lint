@@ -1,17 +1,17 @@
 package security
 
 import (
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type ElasticsearchVPCRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewElasticsearchVPCRule() *ElasticsearchVPCRule {
 	return &ElasticsearchVPCRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"ELASTICSEARCH_VPC",
 			"Elasticsearch Domain Not in VPC",
 			"Elasticsearch domains should be deployed within a VPC",

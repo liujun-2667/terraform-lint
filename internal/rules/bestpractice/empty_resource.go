@@ -1,17 +1,17 @@
 package bestpractice
 
 import (
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type EmptyResourceRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewEmptyResourceRule() *EmptyResourceRule {
 	return &EmptyResourceRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"EMPTY_RESOURCE",
 			"Empty Resource Block",
 			"Resource block has no attributes or blocks defined",

@@ -1,0 +1,17 @@
+# Go build output
+terraform-lint
+terraform-lint.exe
+bin/
+
+# Go module cache
+vendor/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# Archive
+*.zip

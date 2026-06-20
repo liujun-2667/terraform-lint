@@ -3,17 +3,17 @@ package bestpractice
 import (
 	"strings"
 
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type ModuleSourceRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewModuleSourceRule() *ModuleSourceRule {
 	return &ModuleSourceRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"MODULE_SOURCE",
 			"Module Source Not Pinned",
 			"Module sources should be pinned to a specific version or commit",

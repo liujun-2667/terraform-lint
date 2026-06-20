@@ -1,17 +1,17 @@
 package security
 
 import (
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type LocalBackendRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewLocalBackendRule() *LocalBackendRule {
 	return &LocalBackendRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"LOCAL_BACKEND",
 			"Local Backend Configuration",
 			"State files should be stored remotely (not locally) to avoid exposing sensitive data",

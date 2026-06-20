@@ -1,17 +1,17 @@
 package bestpractice
 
 import (
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type VariableDescriptionRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewVariableDescriptionRule() *VariableDescriptionRule {
 	return &VariableDescriptionRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"VARIABLE_DESCRIPTION",
 			"Variable Missing Description",
 			"Each variable should have a description field",

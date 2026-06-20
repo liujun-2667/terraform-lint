@@ -2,17 +2,17 @@ package security
 
 import (
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type RDSEncryptionRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewRDSEncryptionRule() *RDSEncryptionRule {
 	return &RDSEncryptionRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"RDS_ENCRYPTION",
 			"RDS Storage Encryption Not Enabled",
 			"RDS instances should have storage encryption enabled",

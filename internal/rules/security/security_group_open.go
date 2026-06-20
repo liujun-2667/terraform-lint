@@ -4,17 +4,17 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type SecurityGroupOpenRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewSecurityGroupOpenRule() *SecurityGroupOpenRule {
 	return &SecurityGroupOpenRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"SECURITY_GROUP_OPEN",
 			"Security Group Open to World",
 			"Security group ingress rules should not allow 0.0.0.0/0 for sensitive ports",
@@ -61,7 +61,7 @@ func (r *SecurityGroupOpenRule) checkIngressBlock(ctx *types.RuleContext, block 
 	var findings []types.Finding
 
 	attrContent, _, _ := block.Body.PartialContent(&hcl.BodySchema{
-		Attributes: []string{"cidr_blocks"},
+		Attributes: []hcl.AttributeSchema{{Name: "cidr_blocks"}},
 	})
 
 	if cidrAttr, ok := attrContent.Attributes["cidr_blocks"]; ok {

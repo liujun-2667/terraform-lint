@@ -1,17 +1,17 @@
 package security
 
 import (
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type S3LoggingRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewS3LoggingRule() *S3LoggingRule {
 	return &S3LoggingRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"S3_BUCKET_LOGGING",
 			"S3 Bucket Access Logging Not Enabled",
 			"S3 buckets should have access logging enabled for security auditing",

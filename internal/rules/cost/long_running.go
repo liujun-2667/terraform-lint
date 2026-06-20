@@ -4,17 +4,17 @@ import (
 	"strings"
 
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type LongRunningInstanceRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewLongRunningInstanceRule() *LongRunningInstanceRule {
 	return &LongRunningInstanceRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"LONG_RUNNING_INSTANCE",
 			"Potential Long-Running Instance",
 			"Consider using scheduled instances for non-production workloads",

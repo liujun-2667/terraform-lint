@@ -4,19 +4,18 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/hashicorp/hcl/v2"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
-	"github.com/terraform-lint/terraform-lint/internal/rules"
+	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 
 type IAMWildcardActionRule struct {
-	rules.BaseRule
+	types.BaseRule
 }
 
 func NewIAMWildcardActionRule() *IAMWildcardActionRule {
 	return &IAMWildcardActionRule{
-		BaseRule: rules.NewBaseRule(
+		BaseRule: types.NewBaseRule(
 			"IAM_WILDCARD_ACTION",
 			"IAM Policy Wildcard Action",
 			"IAM policies should not use wildcard (*) actions",
