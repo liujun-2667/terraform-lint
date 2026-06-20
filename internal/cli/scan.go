@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -26,6 +27,7 @@ type scanOptions struct {
 	failOn      string
 	changedOnly bool
 	fix         bool
+	dryRun      bool
 	concurrency int
 	pluginDir   string
 }
@@ -49,6 +51,7 @@ func NewScanCommand() *cobra.Command {
 	cmd.Flags().StringVar(&opts.failOn, "fail-on", "error", "Fail on (error, warning, info)")
 	cmd.Flags().BoolVar(&opts.changedOnly, "changed-only", false, "Only scan changed files (git diff)")
 	cmd.Flags().BoolVar(&opts.fix, "fix", false, "Automatically fix issues when possible")
+	cmd.Flags().BoolVar(&opts.dryRun, "dry-run", false, "Preview fixes without applying them (requires --fix)")
 	cmd.Flags().IntVar(&opts.concurrency, "concurrency", 4, "Number of concurrent workers")
 	cmd.Flags().StringVar(&opts.pluginDir, "plugin-dir", "rules", "Directory containing custom rule plugins")
 
@@ -174,12 +177,14 @@ func runFixAndVerify(
 		return nil
 	}
 
-	fixSummary, err := f.Fix(initialResult.Findings, ruleRegistry, getRuleContext)
+	fixSummary, err := f.Fix(initialResult.Findings, ruleRegistry, getRuleContext, opts.dryRun)
 	if err != nil {
 		return nil, initialResult, err
 	}
 
-	if fixSummary.FilesFixed == 0 {
+	fixSummary.DryRun = opts.dryRun
+
+	if fixSummary.FilesFixed == 0 || opts.dryRun {
 		return fixSummary, initialResult, nil
 	}
 
@@ -311,39 +316,99 @@ func rollbackFiles(fixSummary *types.FixSummary, initialFindings, verifiedFindin
 }
 
 func printFixSummary(summary *types.FixSummary) {
-	if summary == nil || summary.FilesFixed == 0 {
+	if summary == nil {
+		return
+	}
+
+	hasChanges := summary.FilesFixed > 0 || summary.TotalSkipped > 0 || summary.FilesRolledBack > 0
+	if !hasChanges {
 		return
 	}
 
 	fmt.Println()
-	fmt.Println(color.CyanString("=== Fix Summary ==="))
-	fmt.Printf("Files fixed: %d\n", summary.FilesFixed)
-	fmt.Printf("Total fixes applied: %d\n", summary.TotalFixed)
+	if summary.DryRun {
+		fmt.Println(color.CyanString("=== Dry-Run Fix Preview ==="))
+		fmt.Println(color.YellowString("No changes will be applied. Review below and run without --dry-run to apply."))
+	} else {
+		fmt.Println(color.CyanString("=== Fix Summary ==="))
+	}
+	fmt.Printf("Files to be fixed: %d\n", summary.FilesFixed)
+	fmt.Printf("Total fixes to be applied: %d\n", summary.TotalFixed)
+	if summary.TotalSkipped > 0 {
+		fmt.Printf(color.YellowString("Total fixes skipped: %d\n"), summary.TotalSkipped)
+	}
+	if summary.SkippedByConflict > 0 {
+		fmt.Printf(color.YellowString("  Skipped due to conflict: %d\n"), summary.SkippedByConflict)
+	}
+	if summary.SkippedByValidation > 0 {
+		fmt.Printf(color.RedString("  Skipped due to validation failure: %d\n"), summary.SkippedByValidation)
+	}
 	if summary.FilesRolledBack > 0 {
 		fmt.Printf(color.YellowString("Files rolled back: %d\n"), summary.FilesRolledBack)
 	}
 	fmt.Println()
 
 	for _, fs := range summary.FileSummaries {
-		if fs.FindingsFixed == 0 && !fs.RolledBack {
+		hasFileChanges := fs.FindingsFixed > 0 || fs.FindingsSkipped > 0 || fs.RolledBack
+		if !hasFileChanges {
 			continue
 		}
 
-		fmt.Printf("  %s: %d fixes\n", fs.File, fs.FindingsFixed)
+		fmt.Printf("  %s: %d fixes, %d skipped\n", fs.File, fs.FindingsFixed, fs.FindingsSkipped)
 
 		for _, r := range fs.Results {
+			action := string(r.Action)
 			if r.Applied {
-				action := string(r.Action)
-				fmt.Printf("    [%s] %s - %s\n", r.RuleID, action, color.GreenString("applied"))
+				status := color.GreenString("will be applied")
+				if !summary.DryRun {
+					status = color.GreenString("applied")
+				}
+				fmt.Printf("    [%s] %s (line %d) - %s\n", r.RuleID, action, r.Line, status)
+				if r.OriginalLine != "" {
+					fmt.Printf("      %s\n", color.RedString("- "+r.OriginalLine))
+				}
 				if r.FixedLine != "" {
-					if len(r.FixedLine) > 80 {
-						fmt.Printf("      → %s...\n", r.FixedLine[:77])
-					} else {
-						fmt.Printf("      → %s\n", r.FixedLine)
+					fixedLines := strings.Split(r.FixedLine, "\n")
+					for _, fl := range fixedLines {
+						fmt.Printf("      %s\n", color.GreenString("+ "+fl))
 					}
 				}
+			} else if r.Skipped {
+				switch r.SkipReason {
+				case types.SkipReasonConflict:
+					fmt.Printf("    [%s] %s (line %d) - %s: %s\n",
+						r.RuleID, action, r.Line,
+						color.YellowString("skipped (conflict)"), r.SkipMessage)
+				case types.SkipReasonValidation:
+					fmt.Printf("    [%s] %s (line %d) - %s: %s\n",
+						r.RuleID, action, r.Line,
+						color.RedString("skipped (validation)"), r.SkipMessage)
+				case types.SkipReasonDuplicate:
+					fmt.Printf("    [%s] %s (line %d) - %s: %s\n",
+						r.RuleID, action, r.Line,
+						color.YellowString("skipped (duplicate)"), r.SkipMessage)
+				}
 			} else if r.Error != "" {
-				fmt.Printf("    [%s] %s - %s: %s\n", r.RuleID, r.Action, color.RedString("failed"), r.Error)
+				fmt.Printf("    [%s] %s (line %d) - %s: %s\n",
+					r.RuleID, action, r.Line, color.RedString("failed"), r.Error)
+			}
+		}
+
+		if fs.OriginalContent != "" && fs.FixedContent != "" && fs.OriginalContent != fs.FixedContent {
+			diff := fixer.GenerateDiff(fs.OriginalContent, fs.FixedContent)
+			if diff != "" {
+				fmt.Println()
+				fmt.Println("    Diff preview:")
+				diffLines := strings.Split(diff, "\n")
+				for _, dl := range diffLines {
+					if strings.HasPrefix(dl, "-") {
+						fmt.Printf("    %s\n", color.RedString(dl))
+					} else if strings.HasPrefix(dl, "+") {
+						fmt.Printf("    %s\n", color.GreenString(dl))
+					} else {
+						fmt.Printf("    %s\n", dl)
+					}
+				}
 			}
 		}
 
@@ -351,5 +416,14 @@ func printFixSummary(summary *types.FixSummary) {
 			fmt.Printf("    %s: %s\n", color.YellowString("ROLLBACK"), fs.RollbackReason)
 		}
 		fmt.Println()
+	}
+
+	if summary.DryRun {
+		fmt.Println(color.YellowString("Summary: %d fix(es) will be applied, %d skipped due to conflict, %d skipped due to validation failure.",
+			summary.TotalFixed, summary.SkippedByConflict, summary.SkippedByValidation))
+		fmt.Println(color.YellowString("Run 'scan --fix' without --dry-run to apply these changes."))
+	} else {
+		fmt.Printf("Summary: %d fix(es) applied, %d skipped due to conflict, %d skipped due to validation failure.\n",
+			summary.TotalFixed, summary.SkippedByConflict, summary.SkippedByValidation)
 	}
 }

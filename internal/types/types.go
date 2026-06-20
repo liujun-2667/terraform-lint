@@ -58,31 +58,54 @@ type FixInstruction struct {
 	Column       int
 }
 
+type SkipReason string
+
+const (
+	SkipReasonNone         SkipReason = ""
+	SkipReasonConflict     SkipReason = "conflict"
+	SkipReasonValidation   SkipReason = "validation_failed"
+	SkipReasonDuplicate    SkipReason = "duplicate"
+)
+
 type FixResult struct {
 	File         string
 	RuleID       string
 	Action       FixActionType
 	Applied      bool
+	Skipped      bool
+	SkipReason   SkipReason
+	SkipMessage  string
 	Error        string
 	OriginalLine string
 	FixedLine    string
+	Line         int
+	Severity     Severity
 }
 
 type FileFixSummary struct {
-	File          string
-	BackupPath    string
-	FindingsFixed int
-	Results       []FixResult
-	RolledBack    bool
-	RollbackReason string
-	NewFindings    []Finding
+	File               string
+	BackupPath         string
+	FindingsFixed      int
+	FindingsSkipped    int
+	SkippedByConflict  int
+	SkippedByValidation int
+	Results            []FixResult
+	RolledBack         bool
+	RollbackReason     string
+	NewFindings        []Finding
+	OriginalContent    string
+	FixedContent       string
 }
 
 type FixSummary struct {
-	FilesFixed     int
-	TotalFixed     int
-	FilesRolledBack int
-	FileSummaries  []FileFixSummary
+	FilesFixed          int
+	TotalFixed          int
+	TotalSkipped        int
+	SkippedByConflict   int
+	SkippedByValidation int
+	FilesRolledBack     int
+	DryRun              bool
+	FileSummaries       []FileFixSummary
 }
 
 type Rule interface {
@@ -201,6 +224,7 @@ type ScanOptions struct {
 	FailOn      Severity
 	ChangedOnly bool
 	Fix         bool
+	DryRun      bool
 }
 
 type ScanResult struct {

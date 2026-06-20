@@ -28,13 +28,14 @@ func (f *Fixer) Fix(
 	findings []types.Finding,
 	ruleRegistry interface{},
 	getRuleContext func(string) *types.RuleContext,
+	dryRun bool,
 ) (*types.FixSummary, error) {
-	summary := &types.FixSummary{}
+	summary := &types.FixSummary{DryRun: dryRun}
 
 	fileFindings := groupFindingsByFile(findings)
 
 	for filePath, fileFindingsList := range fileFindings {
-		fileSummary, err := f.fixFile(filePath, fileFindingsList, ruleRegistry, getRuleContext)
+		fileSummary, err := f.fixFile(filePath, fileFindingsList, ruleRegistry, getRuleContext, dryRun)
 		if err != nil {
 			return summary, fmt.Errorf("fixing file %s: %w", filePath, err)
 		}
@@ -45,6 +46,9 @@ func (f *Fixer) Fix(
 		if fileSummary.RolledBack {
 			summary.FilesRolledBack++
 		}
+		summary.TotalSkipped += fileSummary.FindingsSkipped
+		summary.SkippedByConflict += fileSummary.SkippedByConflict
+		summary.SkippedByValidation += fileSummary.SkippedByValidation
 		summary.FileSummaries = append(summary.FileSummaries, *fileSummary)
 	}
 
@@ -64,22 +68,28 @@ func (f *Fixer) fixFile(
 	findings []types.Finding,
 	ruleRegistry interface{},
 	getRuleContext func(string) *types.RuleContext,
+	dryRun bool,
 ) (*types.FileFixSummary, error) {
 	summary := &types.FileFixSummary{
 		File: filePath,
 	}
 
-	backupPath, err := f.backupFile(filePath)
-	if err != nil {
-		return summary, fmt.Errorf("backup file: %w", err)
-	}
-	summary.BackupPath = backupPath
-
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return summary, fmt.Errorf("read file: %w", err)
 	}
-	lines := strings.Split(string(content), "\n")
+	originalContent := string(content)
+	summary.OriginalContent = originalContent
+	lines := strings.Split(originalContent, "\n")
+
+	var backupPath string
+	if !dryRun {
+		backupPath, err = f.backupFile(filePath)
+		if err != nil {
+			return summary, fmt.Errorf("backup file: %w", err)
+		}
+		summary.BackupPath = backupPath
+	}
 
 	f.indentUnit, _ = detectIndentStyle(lines)
 
@@ -101,6 +111,18 @@ func (f *Fixer) fixFile(
 		for _, inst := range instructions {
 			key := f.getInstructionKey(inst, finding)
 			if key != "" && seenKeys[key] {
+				result := types.FixResult{
+					File:        filePath,
+					RuleID:      finding.RuleID,
+					Action:      inst.Action,
+					Skipped:     true,
+					SkipReason:  types.SkipReasonDuplicate,
+					SkipMessage: "Duplicate fix instruction",
+					Line:        inst.Line,
+					Severity:    finding.Severity,
+				}
+				summary.Results = append(summary.Results, result)
+				summary.FindingsSkipped++
 				continue
 			}
 			if key != "" {
@@ -115,7 +137,9 @@ func (f *Fixer) fixFile(
 	}
 
 	if len(fixableInstructions) == 0 {
-		os.Remove(backupPath)
+		if !dryRun {
+			os.Remove(backupPath)
+		}
 		return summary, nil
 	}
 
@@ -123,22 +147,63 @@ func (f *Fixer) fixFile(
 		return fixableInstructions[i].instruction.Line > fixableInstructions[j].instruction.Line
 	})
 
+	conflictGroups := detectConflicts(&lines, fixableInstructions)
+
 	for _, iwf := range fixableInstructions {
+		if isSkippedByConflict(iwf, conflictGroups, fixableInstructions) {
+			result := types.FixResult{
+				File:        filePath,
+				RuleID:      iwf.finding.RuleID,
+				Action:      iwf.instruction.Action,
+				Skipped:     true,
+				SkipReason:  types.SkipReasonConflict,
+				SkipMessage: "Skipped due to conflict with higher priority fix",
+				Line:        iwf.instruction.Line,
+				Severity:    iwf.finding.Severity,
+			}
+			summary.Results = append(summary.Results, result)
+			summary.FindingsSkipped++
+			summary.SkippedByConflict++
+			continue
+		}
+
+		if !validateTargetLine(&lines, iwf.instruction) {
+			result := types.FixResult{
+				File:         filePath,
+				RuleID:       iwf.finding.RuleID,
+				Action:       iwf.instruction.Action,
+				Skipped:      true,
+				SkipReason:   types.SkipReasonValidation,
+				SkipMessage:  "Target line content does not match expected",
+				OriginalLine: getLineSafe(&lines, iwf.instruction.Line),
+				Line:         iwf.instruction.Line,
+				Severity:     iwf.finding.Severity,
+			}
+			summary.Results = append(summary.Results, result)
+			summary.FindingsSkipped++
+			summary.SkippedByValidation++
+			continue
+		}
+
 		result := f.applyInstruction(&lines, iwf.instruction)
 		result.File = filePath
 		result.RuleID = iwf.finding.RuleID
+		result.Line = iwf.instruction.Line
+		result.Severity = iwf.finding.Severity
 		summary.Results = append(summary.Results, result)
 		if result.Applied {
 			summary.FindingsFixed++
 		}
 	}
 
-	if summary.FindingsFixed > 0 {
-		newContent := strings.Join(lines, "\n")
-		if err := os.WriteFile(filePath, []byte(newContent), 0644); err != nil {
+	fixedContent := strings.Join(lines, "\n")
+	summary.FixedContent = fixedContent
+
+	if summary.FindingsFixed > 0 && !dryRun {
+		if err := os.WriteFile(filePath, []byte(fixedContent), 0644); err != nil {
 			return summary, fmt.Errorf("write fixed file: %w", err)
 		}
-	} else {
+	} else if !dryRun {
 		os.Remove(backupPath)
 	}
 
@@ -560,6 +625,114 @@ func (f *Fixer) applyDeleteAttribute(lines *[]string, inst types.FixInstruction)
 
 	result.Applied = true
 	return result
+}
+
+func getInstructionLineRange(lines *[]string, inst types.FixInstruction) (int, int) {
+	switch inst.Action {
+	case types.FixActionAppendAttribute, types.FixActionAppendBlock:
+		blockEnd := findBlockEnd(*lines, inst.Line)
+		if blockEnd == -1 {
+			return inst.Line, inst.Line
+		}
+		return inst.Line, blockEnd
+	case types.FixActionReplaceValue, types.FixActionDeleteAttribute:
+		return inst.Line, inst.Line
+	default:
+		return inst.Line, inst.Line
+	}
+}
+
+func rangesOverlap(start1, end1, start2, end2 int) bool {
+	return start1 <= end2 && end1 >= start2
+}
+
+func detectConflicts(lines *[]string, instructions []instructionWithFinding) map[int][]int {
+	lineRanges := make([]struct{ start, end int }, len(instructions))
+	for i, iwf := range instructions {
+		lineRanges[i].start, lineRanges[i].end = getInstructionLineRange(lines, iwf.instruction)
+	}
+
+	conflictGroups := make(map[int][]int)
+	for i := 0; i < len(instructions); i++ {
+		for j := i + 1; j < len(instructions); j++ {
+			if rangesOverlap(lineRanges[i].start, lineRanges[i].end, lineRanges[j].start, lineRanges[j].end) {
+				conflictGroups[i] = append(conflictGroups[i], j)
+				conflictGroups[j] = append(conflictGroups[j], i)
+			}
+		}
+	}
+	return conflictGroups
+}
+
+func isSkippedByConflict(
+	iwf instructionWithFinding,
+	conflictGroups map[int][]int,
+	allInstructions []instructionWithFinding,
+) bool {
+	idx := -1
+	for i := range allInstructions {
+		inst := &allInstructions[i]
+		if inst.instruction.Line == iwf.instruction.Line &&
+			inst.instruction.Action == iwf.instruction.Action &&
+			inst.instruction.Attribute == iwf.instruction.Attribute &&
+			inst.finding.RuleID == iwf.finding.RuleID &&
+			inst.finding.Severity == iwf.finding.Severity {
+			idx = i
+			break
+		}
+	}
+	if idx == -1 {
+		return false
+	}
+
+	conflicts, ok := conflictGroups[idx]
+	if !ok {
+		return false
+	}
+
+	severity := iwf.finding.Severity.Value()
+	for _, conflictIdx := range conflicts {
+		conflictSeverity := allInstructions[conflictIdx].finding.Severity.Value()
+		if conflictSeverity > severity {
+			return true
+		}
+		if conflictSeverity == severity && conflictIdx < idx {
+			return true
+		}
+	}
+	return false
+}
+
+func validateTargetLine(lines *[]string, inst types.FixInstruction) bool {
+	if inst.Line < 1 || inst.Line > len(*lines) {
+		return false
+	}
+
+	line := (*lines)[inst.Line-1]
+
+	switch inst.Action {
+	case types.FixActionReplaceValue:
+		if inst.Attribute != "" {
+			return findAttributeOnLine(line, inst.Attribute) != -1
+		}
+		return true
+	case types.FixActionDeleteAttribute:
+		if inst.Attribute != "" {
+			return findAttributeOnLine(line, inst.Attribute) != -1
+		}
+		return true
+	case types.FixActionAppendAttribute, types.FixActionAppendBlock:
+		return strings.Contains(line, "{")
+	default:
+		return true
+	}
+}
+
+func getLineSafe(lines *[]string, lineNum int) string {
+	if lineNum < 1 || lineNum > len(*lines) {
+		return ""
+	}
+	return (*lines)[lineNum-1]
 }
 
 func (f *Fixer) getInstructionKey(inst types.FixInstruction, finding types.Finding) string {
