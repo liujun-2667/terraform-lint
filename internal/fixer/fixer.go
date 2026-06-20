@@ -652,47 +652,43 @@ func rangesOverlap(start1, end1, start2, end2 int) bool {
 	return start1 <= end2 && end1 >= start2
 }
 
-func detectConflicts(lines *[]string, instructions []instructionWithFinding) map[int][]int {
-	lineRanges := make([]struct{ start, end int }, len(instructions))
-	for i, iwf := range instructions {
-		lineRanges[i].start, lineRanges[i].end = getInstructionLineRange(lines, iwf.instruction)
-	}
+func instructionsConflict(
+	lines *[]string,
+	iIwf, jIwf instructionWithFinding,
+) bool {
+	iAction := iIwf.instruction.Action
+	jAction := jIwf.instruction.Action
 
+	iIsAppend := isAppendAction(iAction)
+	jIsAppend := isAppendAction(jAction)
+
+	switch {
+	case iIsAppend && jIsAppend:
+		if iAction == types.FixActionAppendAttribute && jAction == types.FixActionAppendAttribute {
+			return iIwf.instruction.Attribute == jIwf.instruction.Attribute
+		}
+		if iAction == types.FixActionAppendBlock && jAction == types.FixActionAppendBlock {
+			return iIwf.instruction.BlockType == jIwf.instruction.BlockType
+		}
+		return false
+
+	case iIsAppend || jIsAppend:
+		return false
+
+	default:
+		iRangeStart, iRangeEnd := getInstructionLineRange(lines, iIwf.instruction)
+		jRangeStart, jRangeEnd := getInstructionLineRange(lines, jIwf.instruction)
+		return rangesOverlap(iRangeStart, iRangeEnd, jRangeStart, jRangeEnd)
+	}
+}
+
+func detectConflicts(lines *[]string, instructions []instructionWithFinding) map[int][]int {
 	conflictGroups := make(map[int][]int)
 	for i := 0; i < len(instructions); i++ {
 		for j := i + 1; j < len(instructions); j++ {
-			iIwf := instructions[i]
-			jIwf := instructions[j]
-
-			bothAppend := isAppendAction(iIwf.instruction.Action) && isAppendAction(jIwf.instruction.Action)
-			sameAttributeOrBlock := false
-			if bothAppend {
-				if iIwf.instruction.Action == types.FixActionAppendAttribute && jIwf.instruction.Action == types.FixActionAppendAttribute {
-					sameAttributeOrBlock = iIwf.instruction.Attribute == jIwf.instruction.Attribute
-				} else if iIwf.instruction.Action == types.FixActionAppendBlock && jIwf.instruction.Action == types.FixActionAppendBlock {
-					sameAttributeOrBlock = iIwf.instruction.BlockType == jIwf.instruction.BlockType
-				}
-			}
-
-			if bothAppend && !sameAttributeOrBlock {
-				continue
-			}
-
-			sameResource := iIwf.instruction.ResourceType == jIwf.instruction.ResourceType &&
-				iIwf.instruction.ResourceName == jIwf.instruction.ResourceName
-
-			if !sameResource && !rangesOverlap(lineRanges[i].start, lineRanges[i].end, lineRanges[j].start, lineRanges[j].end) {
-				continue
-			}
-
-			if sameResource || rangesOverlap(lineRanges[i].start, lineRanges[i].end, lineRanges[j].start, lineRanges[j].end) {
-				if bothAppend && sameAttributeOrBlock {
-					conflictGroups[i] = append(conflictGroups[i], j)
-					conflictGroups[j] = append(conflictGroups[j], i)
-				} else if !bothAppend {
-					conflictGroups[i] = append(conflictGroups[i], j)
-					conflictGroups[j] = append(conflictGroups[j], i)
-				}
+			if instructionsConflict(lines, instructions[i], instructions[j]) {
+				conflictGroups[i] = append(conflictGroups[i], j)
+				conflictGroups[j] = append(conflictGroups[j], i)
 			}
 		}
 	}
