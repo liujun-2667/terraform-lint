@@ -1,0 +1,91 @@
+# terraform-lint Configuration File
+# This is an example configuration file. Customize it to your needs.
+
+ignore_paths:
+  - ".git/"
+  - "node_modules/"
+  - "vendor/"
+  - ".terraform/"
+
+global:
+  required_tags:
+    - Environment
+    - Owner
+    - Project
+  naming_regex: "^[a-z_][a-z0-9_]*$"
+  max_concurrency: 8
+
+rules:
+  # Security Rules
+  S3_BUCKET_ENCRYPTION:
+    enabled: true
+    severity: warning
+
+  S3_BUCKET_PUBLIC_ACL:
+    enabled: true
+    severity: error
+
+  SECURITY_GROUP_OPEN:
+    enabled: true
+    severity: error
+
+  DB_PUBLICLY_ACCESSIBLE:
+    enabled: true
+    severity: error
+
+  IAM_WILDCARD_ACTION:
+    enabled: true
+    severity: warning
+
+  # Best Practice Rules
+  RESOURCE_TAGS:
+    enabled: true
+    severity: info
+    params:
+      required_tags:
+        - Environment
+        - Owner
+
+  NAMING_CONVENTION:
+    enabled: true
+    severity: info
+    params:
+      pattern: "^[a-z_][a-z0-9_]*$"
+
+  VARIABLE_DESCRIPTION:
+    enabled: true
+    severity: info
+
+  OUTPUT_DESCRIPTION:
+    enabled: true
+    severity: info
+
+  PROVIDER_VERSION:
+    enabled: true
+    severity: warning
+
+  # Cost Optimization Rules
+  EXPENSIVE_INSTANCE_TYPE:
+    enabled: true
+    severity: info
+    params:
+      expensive_families:
+        - p2
+        - p3
+        - p4
+        - x1
+        - x1e
+
+  UNUSED_EIP:
+    enabled: true
+    severity: info
+
+  RDS_MULTI_AZ_SMALL:
+    enabled: true
+    severity: info
+
+  NAT_GATEWAY_COUNT:
+    enabled: true
+    severity: info
+    params:
+      threshold: 2
