@@ -1,7 +1,6 @@
 package security
 
 import (
-	"github.com/hashicorp/hcl/v2"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
 	
 	"github.com/terraform-lint/terraform-lint/internal/types"
@@ -40,10 +39,7 @@ func (r *DynamoDBEncryptionRule) Check(ctx *types.RuleContext) []types.Finding {
 
 		for _, block := range resource.Blocks {
 			if block.Type == "server_side_encryption" {
-				attrContent, _, _ := block.Body.PartialContent(&hcl.BodySchema{
-					Attributes: []hcl.AttributeSchema{{Name: "enabled"}},
-				})
-				if enabledAttr, ok := attrContent.Attributes["enabled"]; ok {
+				if enabledAttr, ok := block.Attributes["enabled"]; ok {
 					val, _, err := ast.GetAttributeValue(enabledAttr, nil)
 					if err == nil {
 						if enabled, ok := val.(bool); ok && enabled {

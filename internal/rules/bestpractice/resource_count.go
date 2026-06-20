@@ -1,8 +1,6 @@
 package bestpractice
 
 import (
-	"github.com/terraform-lint/terraform-lint/internal/ast"
-	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )
 

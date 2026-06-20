@@ -1,7 +1,6 @@
 package security
 
 import (
-	"github.com/hashicorp/hcl/v2"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
 	
 	"github.com/terraform-lint/terraform-lint/internal/types"
@@ -38,10 +37,7 @@ func (r *LambdaEnvVarsRule) Check(ctx *types.RuleContext) []types.Finding {
 
 		for _, block := range resource.Blocks {
 			if block.Type == "environment" {
-				attrContent, _, _ := block.Body.PartialContent(&hcl.BodySchema{
-					Attributes: []hcl.AttributeSchema{{Name: "variables"}},
-				})
-				if varsAttr, ok := attrContent.Attributes["variables"]; ok {
+				if varsAttr, ok := block.Attributes["variables"]; ok {
 					val, _, err := ast.GetAttributeValue(varsAttr, nil)
 					if err == nil {
 						if valMap, ok := val.(map[string]interface{}); ok {
@@ -50,8 +46,8 @@ func (r *LambdaEnvVarsRule) Check(ctx *types.RuleContext) []types.Finding {
 									if utils.LooksLikeSecret(vStr) {
 										findings = append(findings, r.NewFinding(
 											ctx,
-											block.DefRange.Start.Line,
-											block.DefRange.Start.Column,
+											block.Range.Start.Line,
+											block.Range.Start.Column,
 											"Lambda environment variable '"+k+"' contains potential sensitive data",
 											resource.Type,
 											resource.Name,

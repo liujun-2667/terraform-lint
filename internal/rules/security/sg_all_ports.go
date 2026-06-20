@@ -1,7 +1,6 @@
 package security
 
 import (
-	"github.com/hashicorp/hcl/v2"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
 	
 	"github.com/terraform-lint/terraform-lint/internal/types"
@@ -49,17 +48,13 @@ func (r *SecurityGroupAllPortsRule) Check(ctx *types.RuleContext) []types.Findin
 	return findings
 }
 
-func (r *SecurityGroupAllPortsRule) checkPortsBlock(ctx *types.RuleContext, block *hcl.Block, resource types.Resource) []types.Finding {
+func (r *SecurityGroupAllPortsRule) checkPortsBlock(ctx *types.RuleContext, block *types.Block, resource types.Resource) []types.Finding {
 	var findings []types.Finding
-
-	attrContent, _, _ := block.Body.PartialContent(&hcl.BodySchema{
-		Attributes: []hcl.AttributeSchema{{Name: "from_port"}, {Name: "to_port"}},
-	})
 
 	fromPort := -1
 	toPort := -1
 
-	if attr, ok := attrContent.Attributes["from_port"]; ok {
+	if attr, ok := block.Attributes["from_port"]; ok {
 		val, _, err := ast.GetAttributeValue(attr, nil)
 		if err == nil {
 			if port, ok := val.(float64); ok {
@@ -68,7 +63,7 @@ func (r *SecurityGroupAllPortsRule) checkPortsBlock(ctx *types.RuleContext, bloc
 		}
 	}
 
-	if attr, ok := attrContent.Attributes["to_port"]; ok {
+	if attr, ok := block.Attributes["to_port"]; ok {
 		val, _, err := ast.GetAttributeValue(attr, nil)
 		if err == nil {
 			if port, ok := val.(float64); ok {
@@ -78,11 +73,11 @@ func (r *SecurityGroupAllPortsRule) checkPortsBlock(ctx *types.RuleContext, bloc
 	}
 
 	if fromPort == 0 && toPort == 65535 {
-		if !r.ShouldIgnore(ctx, block.DefRange.Start.Line) {
+		if !r.ShouldIgnore(ctx, block.Range.Start.Line) {
 			findings = append(findings, r.NewFinding(
 				ctx,
-				block.DefRange.Start.Line,
-				block.DefRange.Start.Column,
+				block.Range.Start.Line,
+				block.Range.Start.Column,
 				"Security group rule allows all ports (0-65535)",
 				resource.Type,
 				resource.Name,

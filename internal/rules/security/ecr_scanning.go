@@ -1,7 +1,6 @@
 package security
 
 import (
-	"github.com/hashicorp/hcl/v2"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
 	
 	"github.com/terraform-lint/terraform-lint/internal/types"
@@ -38,10 +37,7 @@ func (r *ECRScanningRule) Check(ctx *types.RuleContext) []types.Finding {
 		hasScanning := false
 		for _, block := range resource.Blocks {
 			if block.Type == "image_scanning_configuration" {
-				attrContent, _, _ := block.Body.PartialContent(&hcl.BodySchema{
-					Attributes: []hcl.AttributeSchema{{Name: "scan_on_push"}},
-				})
-				if scanAttr, ok := attrContent.Attributes["scan_on_push"]; ok {
+				if scanAttr, ok := block.Attributes["scan_on_push"]; ok {
 					val, _, err := ast.GetAttributeValue(scanAttr, nil)
 					if err == nil {
 						if enabled, ok := val.(bool); ok && enabled {

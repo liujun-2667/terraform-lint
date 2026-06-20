@@ -1,7 +1,6 @@
 package security
 
 import (
-	"github.com/hashicorp/hcl/v2"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
 	
 	"github.com/terraform-lint/terraform-lint/internal/types"
@@ -37,20 +36,17 @@ func (r *SecurityGroupEgressAllRule) Check(ctx *types.RuleContext) []types.Findi
 
 		for _, block := range resource.Blocks {
 			if block.Type == "egress" {
-				attrContent, _, _ := block.Body.PartialContent(&hcl.BodySchema{
-					Attributes: []hcl.AttributeSchema{{Name: "cidr_blocks"}},
-				})
-				if cidrAttr, ok := attrContent.Attributes["cidr_blocks"]; ok {
+				if cidrAttr, ok := block.Attributes["cidr_blocks"]; ok {
 					val, _, err := ast.GetAttributeValue(cidrAttr, nil)
 					if err == nil {
 						if cidrs, ok := val.([]string); ok {
 							for _, cidr := range cidrs {
 								if cidr == "0.0.0.0/0" {
-									if !r.ShouldIgnore(ctx, block.DefRange.Start.Line) {
+									if !r.ShouldIgnore(ctx, block.Range.Start.Line) {
 										findings = append(findings, r.NewFinding(
 											ctx,
-											block.DefRange.Start.Line,
-											block.DefRange.Start.Column,
+											block.Range.Start.Line,
+											block.Range.Start.Column,
 											"Security group allows all egress traffic to 0.0.0.0/0",
 											resource.Type,
 											resource.Name,

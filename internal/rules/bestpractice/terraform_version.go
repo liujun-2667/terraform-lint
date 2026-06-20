@@ -2,7 +2,6 @@ package bestpractice
 
 import (
 	"github.com/hashicorp/hcl/v2"
-	"github.com/terraform-lint/terraform-lint/internal/ast"
 	
 	"github.com/terraform-lint/terraform-lint/internal/types"
 )

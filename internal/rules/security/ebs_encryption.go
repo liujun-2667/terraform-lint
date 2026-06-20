@@ -1,7 +1,6 @@
 package security
 
 import (
-	"github.com/hashicorp/hcl/v2"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
 	
 	"github.com/terraform-lint/terraform-lint/internal/types"
@@ -75,17 +74,14 @@ func (r *EBSEncryptionRule) Check(ctx *types.RuleContext) []types.Finding {
 		} else if resource.Type == "aws_instance" {
 			for _, block := range resource.Blocks {
 				if block.Type == "root_block_device" || block.Type == "ebs_block_device" {
-					attrContent, _, _ := block.Body.PartialContent(&hcl.BodySchema{
-						Attributes: []hcl.AttributeSchema{{Name: "encrypted"}},
-					})
-					if encAttr, ok := attrContent.Attributes["encrypted"]; ok {
+					if encAttr, ok := block.Attributes["encrypted"]; ok {
 						val, _, err := ast.GetAttributeValue(encAttr, nil)
 						if err == nil {
 							if encrypted, ok := val.(bool); ok && !encrypted {
 								findings = append(findings, r.NewFinding(
 									ctx,
-									block.DefRange.Start.Line,
-									block.DefRange.Start.Column,
+									block.Range.Start.Line,
+									block.Range.Start.Column,
 									"EC2 instance block device encryption is disabled",
 									resource.Type,
 									resource.Name,

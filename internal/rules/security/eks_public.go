@@ -1,7 +1,6 @@
 package security
 
 import (
-	"github.com/hashicorp/hcl/v2"
 	"github.com/terraform-lint/terraform-lint/internal/ast"
 	
 	"github.com/terraform-lint/terraform-lint/internal/types"
@@ -37,17 +36,14 @@ func (r *EKSPublicEndpointRule) Check(ctx *types.RuleContext) []types.Finding {
 
 		for _, block := range resource.Blocks {
 			if block.Type == "vpc_config" {
-				attrContent, _, _ := block.Body.PartialContent(&hcl.BodySchema{
-					Attributes: []hcl.AttributeSchema{{Name: "endpoint_public_access"}},
-				})
-				if publicAttr, ok := attrContent.Attributes["endpoint_public_access"]; ok {
+				if publicAttr, ok := block.Attributes["endpoint_public_access"]; ok {
 					val, _, err := ast.GetAttributeValue(publicAttr, nil)
 					if err == nil {
 						if public, ok := val.(bool); ok && public {
 							findings = append(findings, r.NewFinding(
 								ctx,
-								block.DefRange.Start.Line,
-								block.DefRange.Start.Column,
+								block.Range.Start.Line,
+								block.Range.Start.Column,
 								"EKS cluster has public endpoint access enabled",
 								resource.Type,
 								resource.Name,
